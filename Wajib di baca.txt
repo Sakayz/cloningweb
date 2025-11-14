@@ -12,6 +12,13 @@ git push origin main
  dan saat kalian mau ganti code pastikan untuk ketik
  git pull => agar dapat update code baru kalau ada
 
+
+
+
 jangan dii rusak ya
 capek yang buat
-kalau mau ubah tampilan web cukup di file index.hmtl utnuk script.js jangan rubah 
+kalau mau ubah tampilan web cukup di file index.hmtl utnuk script.js jangan rubah
+
+
+oh iya kalau boleh follow juga akun github ku ya :)
+https://github.com/Sakayz
