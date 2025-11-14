@@ -1,0 +1,17 @@
+kalau mau rubah codingan ini di wajibkan untuk clone dari github saya dahulu 
+dan pastikan sebelum itu di leptop kalian sudah ter install vs code dan juga git kalian bisa cari di google link dwonloadnya 
+nanti setelah kalian dwonload vs code dan git nya kalian buka vs code nya dan buka terminal vs codenya dan ketik
+git --version 
+git clone https://github.com/Sakayz/khd-web-5-.git
+nah kalian sudah punya clone dari codingan ini kalian bisa ubah tampilan segala macem ws 
+setelah kalian coding jangan lupa untuk di commit dengan cara
+git add .
+git commit -m "Update terbaru"
+git push origin main
+ 
+ dan saat kalian mau ganti code pastikan untuk ketik
+ git pull => agar dapat update code baru kalau ada
+
+jangan dii rusak ya
+capek yang buat
+kalau mau ubah tampilan web cukup di file index.hmtl utnuk script.js jangan rubah 
