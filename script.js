@@ -1,5 +1,7 @@
-// === GALERI DENGAN ALBUM ===
-const GALLERY_KEY = 'pramuka_gallery_albums_v2';
+// script.js — FINAL VERSION (17 Nov 2025)
+// Semua fitur + galeri online permanen pake ImgBB
+
+const IMGBB_API_KEY = '25d031ae01247b7fa78ffc8e9d129f69'; // <<< WAJIB GANTI INI !!!
 
 const ALBUMS = [
   { id: 'perkemahan', name: 'Perkemahan' },
@@ -13,123 +15,71 @@ const ALBUMS = [
   { id: 'lainnya', name: 'Lainnya' }
 ];
 
-function getGallery() {
-  try {
-    const data = JSON.parse(localStorage.getItem(GALLERY_KEY));
-    if (!data || typeof data !== 'object') throw new Error();
-    // Inisialisasi album kosong jika belum ada
-    ALBUMS.forEach(album => {
-      if (!data[album.id]) data[album.id] = [];
-    });
-    return data;
-  } catch {
-    const empty = {};
-    ALBUMS.forEach(album => empty[album.id] = []);
-    return empty;
+// === ANIMASI KETIK ===
+function startTyping() {
+  const el = document.getElementById('typing-text');
+  const text1 = "Ki Hajar Dewantara";
+  const text2 = "Welcome!";
+  let i = 0, dir = 1, current = text1;
+
+  function type() {
+    if (dir === 1 && i === text1.length + 10) { current = text2; dir = -1; i = text2.length; }
+    if (dir === -1 && i === 0) { current = text1; dir = 1; }
+    el.textContent = current.slice(0, i) + "|";
+    i += dir;
+    setTimeout(type, dir === 1 ? 120 : 80);
   }
+  type();
 }
 
+// === GALERI ONLINE ===
+function getGallery() {
+  return JSON.parse(localStorage.getItem('khd_gallery_2025') || '{}');
+}
 function saveGallery(data) {
-  localStorage.setItem(GALLERY_KEY, JSON.stringify(data));
+  localStorage.setItem('khd_gallery_2025', JSON.stringify(data));
 }
 
-// === Load Galeri Utama (Tampilkan Album) ===
-function loadGalleryToPage() {
+function loadGallery() {
   const container = document.getElementById('masonry');
-  if (!container) return;
   container.innerHTML = '';
-
   const data = getGallery();
-  let hasImages = false;
+  let hasImg = false;
 
   ALBUMS.forEach(album => {
-    const images = data[album.id] || [];
-    if (images.length > 0) {
-      hasImages = true;
-      // Kolom untuk setiap album
-      const albumCol = document.createElement('div');
-      albumCol.className = 'bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800';
-
-      // Judul Album
-      const title = document.createElement('h3');
-      title.className = 'text-2xl font-bold text-maroon mb-4 dark:text-gold';
-      title.textContent = album.name;
-      albumCol.appendChild(title);
-
-      // Grid gambar (2 kolom mobile, 3 kolom desktop)
+    if (data[album.id] && data[album.id].length > 0) {
+      hasImg = true;
+      const section = document.createElement('div');
+      section.className = 'mb-12';
+      section.innerHTML = `<h3 class="text-2xl font-bold text-maroon dark:text-gold mb-6">${album.name}</h3>`;
       const grid = document.createElement('div');
-      grid.className = 'grid grid-cols-2 md:grid-cols-3 gap-4';
-      images.forEach((src, index) => {
-        const imgDiv = addImageToGrid(grid, src);
-        if (index >= 7) {
-          imgDiv.classList.add('hidden');
-        }
+      grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
+      data[album.id].forEach(src => {
+        const div = document.createElement('div');
+        div.className = 'relative overflow-hidden rounded-xl shadow-lg cursor-pointer group';
+        div.innerHTML = `<img src="${src}" class="w-full h-auto object-cover transition group-hover:scale-110" onclick="openLightbox('${src}')">`;
+        grid.appendChild(div);
       });
-      albumCol.appendChild(grid);
-
-      // Tombol Show More jika >7 gambar
-      if (images.length > 7) {
-        const showMoreBtn = document.createElement('button');
-        showMoreBtn.className = 'mt-4 bg-maroon text-white px-4 py-2 rounded-full font-bold hover:bg-maroon/90 transition dark:bg-gold dark:text-maroon dark:hover:bg-gold/90';
-        showMoreBtn.textContent = 'Lihat Semua';
-        showMoreBtn.onclick = () => {
-          grid.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
-          showMoreBtn.remove();
-        };
-        albumCol.appendChild(showMoreBtn);
-      }
-
-      container.appendChild(albumCol);
+      section.appendChild(grid);
+      container.appendChild(section);
     }
   });
 
-  if (!hasImages) {
-    const placeholders = ['assets/placeholder3.svg', 'assets/placeholder4.svg', 'assets/placeholder5.svg'];
-    placeholders.forEach(src => addImageToMasonry(src));
-  }
-}
-
-function addImageToGrid(parent, src) {
-  const div = document.createElement('div');
-  div.className = 'relative overflow-hidden rounded-xl shadow-lg group cursor-pointer';
-  const img = document.createElement('img');
-  img.src = src;
-  img.className = 'w-full h-auto object-cover transition-transform duration-500 group-hover:scale-110';
-  img.onclick = () => openLightbox(src);
-  div.appendChild(img);
-  parent.appendChild(div);
-  return div;
-}
-
-function addImageToMasonry(src) {
-  const container = document.getElementById('masonry');
-  const div = document.createElement('div');
-  div.className = 'relative overflow-hidden rounded-xl shadow-lg group cursor-pointer';
-  const img = document.createElement('img');
-  img.src = src;
-  img.className = 'w-full h-auto object-cover transition-transform duration-500 group-hover:scale-110';
-  img.onclick = () => openLightbox(src);
-  div.appendChild(img);
-  container.appendChild(div);
+  if (!hasImg) container.innerHTML = '<p class="text-center col-span-full text-gray-500">Belum ada foto :(</p>';
 }
 
 function openLightbox(src) {
   const overlay = document.createElement('div');
-  overlay.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4';
+  overlay.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+  overlay.innerHTML = `<img src="${src}" class="max-w-full max-h-full rounded-2xl">`;
   overlay.onclick = () => overlay.remove();
-  const img = document.createElement('img');
-  img.src = src;
-  img.className = 'max-w-full max-h-full rounded-xl shadow-2xl';
-  overlay.appendChild(img);
   document.body.appendChild(overlay);
 }
 
-// === LOAD ANGGOTA INTI ===
-function loadAnggotaInti() {
+// === BIDANG INTI (klik = preview) ===
+function loadBidangInti() {
   const container = document.getElementById('anggota-inti-container');
-  if (!container) return;
-
-  const bidangList = [
+  const list = [
     { nama: 'Kerani', img: '/lhd web 4/assets/kerani.jpg' },
     { nama: 'Giatop', img: '/lhd web 4/assets/giatop.jpg' },
     { nama: 'Bangkert', img: '/lhd web 4/assets/bangkert.jpg' },
@@ -137,183 +87,59 @@ function loadAnggotaInti() {
     { nama: 'Humcit', img: '/lhd web 4/assets/humcit.jpg' },
     { nama: 'Evbang', img: '/lhd web 4/assets/evbang.jpg' },
   ];
-
-  container.innerHTML = bidangList.map(b => `
-    <div class="bg-white p-5 rounded-xl shadow-lg text-center transform hover:scale-105 transition dark:bg-gray-800">
-      <img src="${b.img}" alt="${b.nama}" class="w-20 h-20 mx-auto rounded-full object-cover mb-3 shadow-md">
-      <h4 class="font-bold text-maroon text-sm dark:text-gold">${b.nama}</h4>
+  container.innerHTML = list.map(p => `
+    <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-lg text-center cursor-pointer hover:scale-105 transition"
+         onclick="openLightbox('${p.img}')">
+      <img src="${p.img}" class="w-24 h-24 mx-auto rounded-full object-cover mb-3 shadow-md">
+      <h4 class="font-bold text-maroon dark:text-gold">${p.nama}</h4>
       <p class="text-xs text-gray-600 dark:text-gray-400">Ketua Bidang</p>
     </div>
   `).join('');
 }
 
-// === ADMIN FUNCTIONS ===
-function handleLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('username').value;
-  const p = document.getElementById('password').value;
-  if (u === 'admin' && p === 'admin') {
-    document.getElementById('loginCard').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    loadAdminImages();
-  } else {
-    alert('Username atau password salah!');
-  }
-}
+// === ADMIN UPLOAD (di admin.html) ===
+async function uploadFiles() {
+  if (IMGBB_API_KEY.includes('GANTI_DENGAN')) return alert('Ganti dulu API Key ImgBB di script.js!');
+  const files = document.getElementById('fileInput').files;
+  const album = document.getElementById('albumSelect').value;
+  if (!files.length) return alert('Pilih foto dulu!');
 
-function logout() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('loginCard').classList.remove('hidden');
-  document.getElementById('username').value = '';
-  document.getElementById('password').value = '';
-}
-
-function uploadFiles() {
-  const input = document.getElementById('fileInput');
-  const albumId = document.getElementById('albumSelect')?.value || 'lainnya';
-  const files = input.files;
-  if (!files.length) return alert('Pilih gambar dulu!');
-
-  const data = getGallery();
-  let loaded = 0;
+  let gallery = getGallery();
+  if (!gallery[album]) gallery[album] = [];
 
   for (let file of files) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (!data[albumId]) data[albumId] = [];
-      data[albumId].unshift(e.target.result);
-      loaded++;
-      if (loaded === files.length) {
-        saveGallery(data);
-        loadAdminImages();
-        input.value = '';
-        alert('Upload selesai!');
-      }
-    };
-    reader.readAsDataURL(file);
+    const form = new FormData();
+    form.append('image', file);
+    try {
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: form });
+      const json = await res.json();
+      if (json.success) gallery[album].unshift(json.data.url);
+    } catch (e) { console.error(e); }
   }
+  saveGallery(gallery);
+  alert('Upload selesai! Foto sudah online permanen!');
+  loadGallery();
+  loadAdminImages?.();
 }
 
-function loadAdminImages() {
-  const list = document.getElementById('imageList');
-  if (!list) return;
-  list.innerHTML = '';
-
-  const data = getGallery();
-  let hasImages = false;
-
-  ALBUMS.forEach(album => {
-    const images = data[album.id] || [];
-    if (images.length > 0) {
-      hasImages = true;
-      const title = document.createElement('h4');
-      title.className = 'col-span-full text-lg font-bold text-maroon mt-6 mb-2 dark:text-gold';
-      title.textContent = album.name;
-      list.appendChild(title);
-
-      images.forEach((src, i) => {
-        const div = document.createElement('div');
-        div.className = 'relative group';
-        const img = document.createElement('img');
-        img.src = src;
-        img.className = 'w-full h-32 object-cover rounded-lg shadow';
-        const btn = document.createElement('button');
-        btn.textContent = 'Hapus';
-        btn.className = 'absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full text-xs opacity-0 group-hover:opacity-100 transition';
-        btn.onclick = () => {
-          if (confirm('Hapus gambar ini?')) {
-            data[album.id].splice(i, 1);
-            saveGallery(data);
-            loadAdminImages();
-          }
-        };
-        div.appendChild(img);
-        div.appendChild(btn);
-        list.appendChild(div);
-      });
-    }
-  });
-
-  if (!hasImages) {
-    list.innerHTML = '<p class="col-span-full text-center text-gray-500">Belum ada gambar.</p>';
-  }
-}
+// === CONTACT FORM ===
+document.getElementById('contactForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const name = document.getElementById('contactName').value;
+  const email = document.getElementById('contactEmail').value;
+  const msg = document.getElementById('contactMessage').value;
+  window.location.href = `mailto:hasilkorupsi1000@gmail.com?subject=Pesan dari ${name}&body=Nama: ${name}%0AEmail: ${email}%0A%0A${msg}`;
+  this.reset();
+});
 
 // === INIT ===
 document.addEventListener('DOMContentLoaded', () => {
-  loadGalleryToPage();
-  loadAnggotaInti();
+  startTyping();
+  loadGallery();
+  loadBidangInti();
 
-  // Smooth active nav
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('text-gold'));
-      link.classList.add('text-gold');
-    });
-  });
-
-  // Contact form
-  const form = document.getElementById('contactForm');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      alert('Pesan terkirim! (Simulasi)');
-      form.reset();
-    });
-  }
-
-  const loginForm = document.getElementById('loginForm');
-  if (loginForm) {
-    loginForm.addEventListener('submit', handleLogin);
-  }
-
-  // Dark mode sync
-  const saved = localStorage.getItem('darkMode');
-  if (saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  // Dark mode persist
+  if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark');
   }
-
-  document.querySelectorAll('[x-data] button').forEach(btn => {
-    if (btn.innerHTML.includes('fa-moon') || btn.innerHTML.includes('fa-sun')) {
-      btn.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.contains('dark');
-        localStorage.setItem('darkMode', isDark ? 'false' : 'true');
-      });
-    }
-  });
-});
-
-// refresions
-// https://grok.com/share/c2hhcmQtMg%3D%3D_e31a1483-9cd7-4898-9ff1-91b0f07aa919
-
-// === CONTACT FORM - Kirim ke Gmail ===
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  const name = document.getElementById('contactName').value.trim();
-  const email = document.getElementById('contactEmail').value.trim();
-  const message = document.getElementById('contactMessage').value.trim();
-
-  if (!name || !email || !message) {
-    alert('Harap isi semua kolom!');
-    return;
-  }
-
-  // GANTI DENGAN EMAIL KAMU SENDIRI
-  const yourEmail = 'hasilkorupsi1000@gmail.com'; // <-- UBAH DI SINI
-
-  const subject = encodeURIComponent(`Pesan dari ${name} - Pramuka KHD`);
-  const body = encodeURIComponent(
-    `Nama: ${name}\nEmail: ${email}\n\nPesan:\n${message}`
-  );
-
-  const mailtoLink = `mailto:${yourEmail}?subject=${subject}&body=${body}`;
-  
-  // Buka aplikasi email default
-  window.location.href = mailtoLink;
-
-  // Optional: Reset form setelah klik
-  setTimeout(() => {
-    document.getElementById('contactForm').reset();
-  }, 1000);
 });
